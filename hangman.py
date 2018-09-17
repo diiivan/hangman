@@ -5,7 +5,7 @@ from tkinter import Tk, Frame, Button, Label, PhotoImage, Message
 from functools import partial, reduce
 import random
 
-DB = "res/words/test"
+DB = "res/words/places"
 IMDB = "res/images/{}{}"
 
 
@@ -70,17 +70,23 @@ class Hangman():
         self.STATUS_BAR_WIN = "Congratulations"
         self.STATUS_BAR_LOSE = "Shame on you"
 
+        self.root = root
+        self.root.resizable(width=False, height=False)
+
+        self.root.update_idletasks()
         self.width = 500
         self.height = 500
-
-        self.root = root
-        self.root.geometry("{}x{}".format(self.width, self.height))
-        self.root.resizable(width=False, height=False)
+        self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
+        self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
+        self.root.geometry('{}x{}+{}+{}'.format(self.width, self.height, self.x, self.y))
 
         self.buttons_frame_lower = Frame(height=30, width=self.width)
         self.buttons_frame_lower.pack(side="bottom")
         self.buttons_frame_upper = Frame(height=30, width=self.width)
         self.buttons_frame_upper.pack(side="bottom")
+
+        self.button_new_game = Button(self.root,text="Start new game",command=self.__start_new_game)
+        self.button_quit = Button(self.root, text="Quit", command=self.__quit)
 
         self.buttons = []
         letter = 0
@@ -121,6 +127,8 @@ class Hangman():
                 self.status_bar.config(text=self.STATUS_BAR_WIN)
                 for button in self.buttons:
                     button.config(state="disabled")
+                self.button_new_game.pack(anchor="n",side="top")
+                self.button_quit.pack(anchor="n",side="top")
             else:
                 self.status_bar.config(text=self.STATUS_BAR_CORRECT.format(letter))
         else:
@@ -132,12 +140,52 @@ class Hangman():
                 self.status_bar.config(text=self.STATUS_BAR_LOSE)
                 for button in self.buttons:
                     button.config(state="disabled")
+                self.button_new_game.pack(anchor="n", side="top")
+                self.button_quit.pack(anchor="n", side="top")
             else:
                 temp_image = PhotoImage(file=self.image_list[self.image_current_index])
                 self.image.config(image=temp_image)
                 self.image.image = temp_image
                 self.status_bar.config(text=self.STATUS_BAR_INCORRECT.format(letter))
 
+    def __start_new_game(self):
+        self.root.destroy()
+        root = Tk()
+        # False alarm on pycharm, the following line is required
+        hangman = Hangman(root)
+        root.mainloop()
+
+    def __quit(self):
+        self.root.destroy()
+
+class MainMenu:
+    def __init__(self,root):
+        self.root = root
+
+        self.root.resizable(width=False,height=False)
+        self.root.update_idletasks()
+        self.width = 200
+        self.height = 100
+        self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
+        self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
+        self.root.geometry('{}x{}+{}+{}'.format(self.width, self.height, self.x, self.y))
+
+        self.new_game_button = Button(self.root, text="New game", command=self.__new_game)
+        self.new_game_button.place(anchor="center",relx=0.5,rely=0.3)
+
+        self.new_game_button = Button(self.root, text="Quit", command=self.__quit)
+        self.new_game_button.place(anchor="center",relx=0.5,rely=0.7)
+
+    def __new_game(self):
+        self.root.destroy()
+        root = Tk()
+        # False alarm on pycharm, the following line is required
+        hangman = Hangman(root)
+        root.mainloop()
+
+    def __quit(self):
+        self.root.destroy()
+
 root = Tk()
-hangman = Hangman(root)
+main_menu = MainMenu(root)
 root.mainloop()
