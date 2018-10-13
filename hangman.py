@@ -5,14 +5,14 @@ from tkinter import Tk, Frame, Button, Label, PhotoImage, Message
 from functools import partial, reduce
 import random
 
-DB = "res/words/places"
+DBPATH = "res/words/{}"
+DB = {"places": {"name": "Places", "filename": "places"}, "names" : {"name": "Names", "filename" : "names"}}
 IMDB = "res/images/{}{}"
 
 
 class HiddenWord():
-    def __init__(self):
-        self.word = self.generate_word()
-
+    def __init__(self,db_filename):
+        self.word = self.__generate_word(db_filename)
         temp_list = []
         for _ in self.word:
             temp_list.append("_")
@@ -21,12 +21,11 @@ class HiddenWord():
     def get_word(self):
         return self.word
 
-    def generate_word(self):
-        with open(DB, "r") as file:
+    def __generate_word(self,db_filename):
+        with open(DBPATH.format(db_filename), "r") as file:
             lines = file.readlines()
         randomIndex = random.randint(0, len(lines) - 1)
         return lines[randomIndex].replace("\n","")
-
     def get_hidden_word(self):
         return self.hidden_word
 
@@ -50,8 +49,12 @@ class HiddenWord():
         self.hidden_word = "".join(hidden_word_list)
         return self.__detect_finish()
 
+    def full_reveal(self):
+        pass
+
+
 class Hangman():
-    def __init__(self, root):
+    def __init__(self, root,db_filename):
         '''
             0-8 - game states
             9 - win condition
@@ -69,6 +72,8 @@ class Hangman():
         self.STATUS_BAR_INCORRECT = "No letter {}"
         self.STATUS_BAR_WIN = "Congratulations"
         self.STATUS_BAR_LOSE = "Shame on you"
+
+        self.db_filename = db_filename
 
         self.root = root
         self.root.resizable(width=False, height=False)
@@ -104,7 +109,7 @@ class Hangman():
             letter += 1
             self.buttons[i].pack(side="left")
 
-        self.guess_word = HiddenWord()
+        self.guess_word = HiddenWord(self.db_filename)
         self.word = Label(self.root, text=self.guess_word.get_hidden_word())
         self.word.pack(side="bottom")
         self.status_bar = Label(self.root, anchor="center", text=self.STATUS_BAR_START)
@@ -152,7 +157,7 @@ class Hangman():
         self.root.destroy()
         root = Tk()
         # False alarm on pycharm, the following line is required
-        hangman = Hangman(root)
+        hangman = ModeChoose(root)
         root.mainloop()
 
     def __quit(self):
@@ -180,11 +185,36 @@ class MainMenu:
         self.root.destroy()
         root = Tk()
         # False alarm on pycharm, the following line is required
-        hangman = Hangman(root)
+        modeChoose = ModeChoose(root)
         root.mainloop()
 
     def __quit(self):
         self.root.destroy()
+
+class ModeChoose:
+    def __init__(self,root):
+        self.root = root
+
+        self.root.resizable(width=False,height=False)
+        self.root.update_idletasks()
+        self.width = 200
+        self.height = 100
+        self.x = (self.root.winfo_screenwidth() // 2) - (self.width // 2)
+        self.y = (self.root.winfo_screenheight() // 2) - (self.height // 2)
+        self.root.geometry('{}x{}+{}+{}'.format(self.width, self.height, self.x, self.y))
+
+        self.buttons = []
+        for record in DB:
+            self.buttons.append(Button(self.root,text=record,command=partial(self.__chosen_mode, DB[record]["name"])))
+        for button in self.buttons:
+            button.pack()
+
+    def __chosen_mode(self,filename):
+        self.root.destroy()
+        root = Tk()
+        # False alarm on pycharm, the following line is required
+        hangman = Hangman(root,filename)
+        root.mainloop()
 
 root = Tk()
 main_menu = MainMenu(root)
